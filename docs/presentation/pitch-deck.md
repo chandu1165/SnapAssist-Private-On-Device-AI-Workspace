@@ -8,7 +8,7 @@
 - **Tagline:** *"Your files. Your AI. Your device."*
 - **Target Hardware:** Snapdragon®-Powered HP Copilot+ PCs
 - **Author:** Aditya (Lead Engineer & Product Designer)
-- **Visual Recommendation:** Sleek dark-mode mockup of the SnapAssist dashboard displaying 0 cloud API calls, Snapdragon red crimson badge, and Hexagon NPU 45 TOPS indicator.
+- **Visual Recommendation:** Sleek dark-mode mockup of the SnapAssist dashboard displaying 0 cloud API calls, Snapdragon red crimson badge, and active Execution Provider indicator.
 - **Speaker Notes:** 
   > "Judges, today we entrust our most sensitive documents—financial audits, healthcare records, confidential IP, and study notes—to remote cloud AI servers. We present SnapAssist: a privacy-first, on-device AI workspace engineered specifically for Snapdragon-powered HP PCs that delivers instant search, grounded answers, and image analysis with 100% data sovereignty and zero cloud egress."
 
@@ -31,12 +31,12 @@
 - **Title:** SnapAssist — Local-First Intelligence
 - **Concise Content:**
   - **100% On-Device:** Ingestion, parsing, embeddings, vector indexing, and inference execute entirely on localhost.
-  - **Grounded RAG with Citations:** Answers are anchored to specific pages and source files, preventing hallucination.
+  - **Grounded RAG with Citations:** Answers are anchored to specific pages and source files, minimizing hallucination.
   - **Multimodal Understanding:** Native support for PDFs, DOCX, TXT, Markdown, and local screenshot/image OCR.
   - **Verifiable Privacy:** Real-time tamper-evident audit dashboard proving 0 external bytes transmitted.
 - **Visual Recommendation:** Hero product interface showing an imported 4-page whitepaper, extracted action items, and interactive citation drawer.
 - **Speaker Notes:**
-  > "SnapAssist is an on-device personal knowledge workspace. You drag in PDFs, Word docs, logs, or screenshots, and ask questions naturally. SnapAssist retrieves matching passages in under 5 milliseconds and synthesizes grounded answers with page-level citations—all completely offline."
+  > "SnapAssist is an on-device personal knowledge workspace. You drag in PDFs, Word docs, logs, or screenshots, and ask questions naturally. SnapAssist retrieves matching passages in milliseconds and synthesizes grounded answers with page-level citations—all completely offline."
 
 ---
 
@@ -46,7 +46,7 @@
   1. **Ingest & Parse:** PyMuPDF extracts text, structure, and page numbers locally.
   2. **Semantic Chunking:** Sliding window with overlap preserves context and page references.
   3. **Dense Embeddings:** Local 384-dimensional vectorization without cloud APIs.
-  4. **Vector Similarity:** In-memory NumPy SIMD cosine dot-product (< 2.5ms).
+  4. **Vector Similarity:** In-memory NumPy SIMD cosine dot-product (< 1ms).
   5. **Contextual Reasoning:** Grounded synthesis with explicit source citations.
 - **Visual Recommendation:** Clean linear workflow diagram tracing a document from drag-and-drop to chunking, vector indexing, and grounded answer synthesis.
 - **Speaker Notes:**
@@ -57,13 +57,13 @@
 ## Slide 5: Snapdragon & Qualcomm AI Hub Architecture
 - **Title:** Engineered for Snapdragon X Elite & Hexagon NPU
 - **Concise Content:**
-  - **Hexagon™ NPU (45 TOPS):** Dedicated neural acceleration frees CPU/GPU from compute bottlenecks.
-  - **Qualcomm AI Hub Runtimes:** ONNX Runtime with Qualcomm Neural Network (QNN) Execution Provider (`QNNExecutionProvider`) & DirectML.
+  - **Hexagon™ NPU (Up to 45 TOPS Platform Rating):** Dedicated neural acceleration frees CPU/GPU from compute bottlenecks.
+  - **Qualcomm AI Hub Runtimes:** ONNX Runtime with Qualcomm Neural Network (QNN) Execution Provider (`QNNExecutionProvider`) & DirectML fallback (`DmlExecutionProvider`).
   - **Quantized Efficiency:** Optimized for INT4 / W4A16 weight execution (Llama-3.2, Phi-3.5-mini).
-  - **Battery & Thermal Mastery:** ~4.2 Watts continuous inference power draw vs 38W on discrete GPU laptops.
+  - **Low Power & Thermal Footprint:** Designed for efficient on-device execution with extended battery life.
 - **Visual Recommendation:** Qualcomm AI Stack block diagram highlighting QAIRT, QNN Execution Provider, Hexagon HTP, and unified LPDDR5x memory.
 - **Speaker Notes:**
-  > "SnapAssist is built specifically for Snapdragon-powered Windows PCs. By interfacing directly with ONNX Runtime's QNN Execution Provider and DirectML, our architecture targets Qualcomm's 45 TOPS Hexagon NPU. This delivers high-throughput neural processing at roughly 4 Watts of power, giving HP PC users all-day battery life."
+  > "SnapAssist is built specifically for Snapdragon-powered Windows PCs. By interfacing directly with ONNX Runtime's QNN Execution Provider and DirectML, our architecture targets Qualcomm's Hexagon NPU. This delivers efficient neural processing with low power draw, giving HP PC users all-day battery life."
 
 ---
 
@@ -81,16 +81,15 @@
 ---
 
 ## Slide 7: Performance & Deployment
-- **Title:** Empirical Performance on Snapdragon Hardware
+- **Title:** Empirical Performance & Verified Benchmarks
 - **Concise Content:**
-  - **Cold-Start Latency:** 14.87 ms first inference.
-  - **Warm Inference Latency:** 12.84 ms average across iterations.
-  - **Ingestion Speed:** 15.05 ms per PDF page.
-  - **Lightweight Footprint:** 116 MB RAM (RSS), zero VRAM exhaustion.
+  - **Empirical Vector Retrieval:** < 1.0 ms average cosine similarity search (0.28 ms host benchmark).
+  - **Host Benchmark Memory:** ~116 MB RAM (RSS), lightweight local footprint.
+  - **Dynamic Hardware Telemetry:** UI automatically displays active EP (`QNNExecutionProvider` / `DirectML` / `CPUExecutionProvider`).
   - **One-Command Setup:** Automated Windows deployment via `setup.ps1` and `run.ps1`.
 - **Visual Recommendation:** Bar charts comparing Snapdragon on-device latency against typical 800ms+ cloud API roundtrips, alongside memory usage meters.
 - **Speaker Notes:**
-  > "Looking at our empirical benchmarks: SnapAssist achieves an average warm query latency of under 13 milliseconds, with document ingestion taking just 15 milliseconds per page. The application footprint is only 116 MB of RAM, leaving the Snapdragon Oryon CPU completely free for other user tasks."
+  > "Looking at our empirical benchmarks: SnapAssist achieves sub-millisecond similarity search with document ingestion operating entirely in local memory. The application footprint is light, leaving system resources completely free for other user tasks."
 
 ---
 

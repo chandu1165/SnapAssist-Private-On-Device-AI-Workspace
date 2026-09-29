@@ -36,7 +36,7 @@ class LocalLLMProvider(AIProvider):
 
         # If no context provided
         if not context_chunks:
-            ans = "I searched your indexed files, but could not find relevant context for your query. Please make sure the relevant document is uploaded and indexed."
+            ans = "I couldn't find enough information in the indexed documents."
             elapsed = (time.time() - start_time) * 1000
             return {
                 "answer": ans,

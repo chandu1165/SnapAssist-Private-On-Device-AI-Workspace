@@ -72,8 +72,12 @@ export interface PerformanceMetrics {
     };
     npu_telemetry: {
       npu_name: string;
-      rated_tops: number;
+      rated_tops_design_target: number;
       npu_status: string;
+      execution_provider: string;
+      accelerator: string;
+      status: string;
+      reason: string;
       active_execution_provider: string;
       acceleration_type: string;
       is_hardware_npu_active: boolean;

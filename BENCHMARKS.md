@@ -1,54 +1,71 @@
 # SnapAssist Benchmark Suite & Empirical Analysis
 
-> Reproducible hardware benchmarks for the **Qualcomm Snapdragon® AI Lab Build & Present Challenge 2026**.
+> Reproducible hardware and latency benchmarks for **SnapAssist — Private On-Device AI Workspace**.
+
+---
 
 ## 1. Benchmarking Philosophy & Truth in Measurement
 
-In compliance with challenge requirements, **SnapAssist does not fabricate benchmarks, fake NPU utilization, or hardcode performance numbers**. 
+In compliance with competition guidelines, **SnapAssist does not hardcode performance numbers, fake NPU utilization, or invent replacement benchmarks**.
 
-All metrics are measured dynamically through `scripts/benchmark.py` and real-time execution telemetry recorded in SQLite (`backend/data/snapassist.db`).
+Metrics are recorded dynamically through `scripts/benchmark.py` and saved to `benchmarks/latest_benchmark_results.json` and `benchmarks/latest_benchmark_results.md`.
 
 ---
 
 ## 2. Benchmark Reproduction Command
 
-To reproduce benchmarks on any Windows laptop (Snapdragon X Elite Copilot+ PC or x86 development workstation):
+To run the benchmark suite on your device:
 
 ```powershell
 python scripts/benchmark.py
 ```
 
-The script automatically executes:
-1. Hardware architecture and execution provider detection.
-2. Cold-start AI Provider load time.
-3. Multi-page PDF parsing, chunking, and dense vector indexing.
-4. Cold-start first-token query latency.
-5. 5 iterations of warm inference queries with tokens/sec throughput computation.
-6. Memory overhead measurement (psutil RSS MB).
-7. Automatic serialization of verified metrics to `benchmarks/latest_benchmark_results.json`.
+The benchmark script records:
+- ISO timestamp
+- OS version, architecture, and processor name
+- Snapdragon hardware detection status
+- Model name, backend, and execution provider
+- Accelerator status (`ACTIVE`, `FALLBACK`, `UNAVAILABLE`) and reason
+- Model load time
+- Document ingestion latency (total & ms/page)
+- Vector search latency (SIMD cosine dot-product)
+- Cold-start first-token latency
+- Warm inference latencies across 5 iterations
+- Token throughput (tokens/second)
+- Process resident memory (RSS MB)
 
 ---
 
-## 3. Empirical Performance Results
+## 3. Measured Benchmark Results (Host Environment)
 
-The following table summarizes empirical measurements obtained during test suite execution:
+> **Hardware Note:** No Snapdragon hardware benchmark recorded yet (Measured on host x86_64 CPU fallback).
 
-| Benchmark Metric | Measured Result | Operational Note |
+The values below represent actual empirical measurements recorded during the latest benchmark execution:
+
+- **Recorded Timestamp:** 2026-09-30T03:18:07
+- **Host OS:** Windows 10
+- **Host Architecture:** AMD64 / x86_64 (Intel)
+- **Execution Provider:** `CPUExecutionProvider`
+- **Accelerator Status:** `FALLBACK`
+- **Reason:** CPU Fallback — QNN Execution Provider is available on Windows 11 ARM64 Snapdragon hardware. Current host is x86_64.
+
+### Empirical Metrics Table
+
+| Metric | Measured Value | Notes |
 | :--- | :--- | :--- |
-| **Document Ingestion (PDF)** | **15.05 ms / page** | Multi-page text extraction, token estimation, and chunking |
-| **Vector Indexing (SIMD)** | **< 2.5 ms / chunk** | In-memory 384-dimensional dense projection & L2 normalization |
-| **Cold-Start Inference Latency** | **14.87 ms** | First RAG retrieval + grounding synthesis |
-| **Subsequent Warm Latency** | **12.84 ms (avg)** | 5-iteration warm RAG inference queries |
-| **Query Throughput** | **120.4+ tokens/sec** | Instantaneous local generation with zero HTTP network lag |
-| **Active Process Memory (RSS)** | **116.00 MB** | Lightweight memory footprint; zero GPU VRAM exhaustion |
-| **Network Egress** | **0.00 Bytes** | Monitored outbound transmission |
-| **External AI API Calls** | **0 calls** | 100% offline local compute |
+| **Model Load Time** | **0.14 ms** | Local provider initialization |
+| **Document Ingestion** | **27.76 ms total (6.94 ms/page)** | PyMuPDF parsing across 4-page test whitepaper |
+| **Vector Search Latency** | **0.28 ms** | In-memory SIMD cosine dot-product search |
+| **First Inference (Cold Start)** | **11.45 ms** | First local grounded query |
+| **Average Warm Latency** | **11.87 ms** | Average over 5 warm query iterations |
+| **Query Throughput** | **15,118.9 tokens/sec** | Local text extraction & contextual synthesis |
+| **Process Memory (RSS)** | **116.15 MB** | Process resident memory |
+| **Network Egress** | **0 Bytes** | Local execution |
 
 ---
 
-## 4. Hardware Optimization Analysis: Why Snapdragon Matters
+## 4. Target Snapdragon Hardware Optimization
 
-### Hexagon™ NPU (45 TOPS)
-- **Dedicated Neural Silicon:** Snapdragon X-series processors offload vector mathematics and token generation from the CPU/GPU directly onto the Hexagon NPU.
-- **Power Efficiency:** Legacy x86 laptops consume between 35W and 60W during continuous inference, triggering high thermal throttling and cooling fan noise. Snapdragon-powered HP PCs complete the same inference workload at **~4.2 Watts**.
-- **Unified LPDDR5x Memory:** Snapdragon's 8448 MT/s unified memory eliminates the PCIe bus transfer latency inherent to discrete GPU architectures, enabling instant vector cache lookups.
+When executed on a **Qualcomm Snapdragon® X Elite / Snapdragon X Plus** Windows ARM64 Copilot+ PC:
+- The system dynamically selects `QNNExecutionProvider` (targeting the **Qualcomm Hexagon™ NPU**) or `DmlExecutionProvider` (DirectML on Snapdragon Adreno GPU).
+- NPU acceleration offloads tensor mathematics from the CPU, maintaining low thermal dissipation (~4.2W design target) and high power efficiency.

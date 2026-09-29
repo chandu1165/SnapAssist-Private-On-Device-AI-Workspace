@@ -46,3 +46,16 @@ def test_privacy_audit_zero_cloud_calls():
         assert evt["is_local"] is True
         assert evt["bytes_outbound"] == 0
         assert evt["external_api_calls"] == 0
+
+def test_rag_empty_fallback_response():
+    from backend.ai.local_llm_provider import LocalLLMProvider
+    provider = LocalLLMProvider()
+    res = provider.generate("non_existent_query", context_chunks=[])
+    assert res["answer"] == "I couldn't find enough information in the indexed documents."
+    assert res["citations"] == []
+
+def test_cors_allowed_origins():
+    # Verify allowed localhost origin headers
+    res = client.options("/api/health", headers={"Origin": "http://localhost:5173", "Access-Control-Request-Method": "GET"})
+    assert res.headers.get("access-control-allow-origin") == "http://localhost:5173"
+

@@ -1,41 +1,48 @@
 {
-  "benchmark_timestamp": 1790715739.0200136,
-  "device": {
-    "os": "Windows 10",
+  "benchmark_metadata": {
+    "timestamp_iso": "2026-09-30T03:18:07.451674",
+    "windows_version": "Windows 10",
     "architecture": "AMD64",
     "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
-    "is_snapdragon": false,
-    "target_device": "Snapdragon X Elite / Snapdragon X Plus (HP PC)"
+    "is_snapdragon_detected": false,
+    "target_device_profile": "Snapdragon X Elite / Snapdragon X Plus (HP OmniBook / EliteBook)"
   },
   "model_and_runtime": {
     "model_name": "Snapdragon-ONNX-Engine",
+    "model_version": "1.0.0",
     "backend": "ONNX Runtime (CPUExecutionProvider)",
-    "execution_provider": "CPUExecutionProvider (Universal Local CPU Fallback)",
+    "execution_provider": "CPUExecutionProvider",
+    "actual_accelerator": "CPU",
+    "accelerator_status": "FALLBACK",
+    "reason": "CPU Fallback \u2014 QNN Execution Provider is available on Windows 11 ARM64 Snapdragon hardware. Current host is x86_64.",
     "is_hardware_npu_active": false,
-    "available_providers": [
+    "available_ort_providers": [
       "AzureExecutionProvider",
       "CPUExecutionProvider"
     ]
   },
-  "metrics": {
+  "test_input_characteristics": {
+    "sample_document": "qualcomm_snapdragon_whitepaper.pdf",
+    "page_count": 4,
+    "chunk_count": 8,
+    "query_iterations": 5
+  },
+  "empirical_metrics": {
     "model_load_time_ms": 0.14,
-    "document_ingestion": {
-      "pages": 4,
-      "chunks": 8,
-      "total_time_ms": 60.22,
-      "ms_per_page": 15.05
-    },
-    "first_inference_latency_ms": 14.87,
+    "document_ingestion_total_ms": 27.76,
+    "ingestion_ms_per_page": 6.94,
+    "vector_search_latency_ms": 0.28,
+    "first_inference_latency_ms": 11.45,
     "warm_inference_latencies_ms": [
-      12.81,
-      13.02,
-      11.98,
-      13.24,
-      13.13
+      11.64,
+      11.11,
+      10.77,
+      13.41,
+      12.39
     ],
-    "average_warm_latency_ms": 12.84,
-    "throughput_tokens_per_sec": 12354.8,
-    "process_memory_rss_mb": 116.0,
+    "average_warm_latency_ms": 11.87,
+    "throughput_tokens_per_sec": 15118.9,
+    "process_memory_rss_mb": 116.15,
     "network_egress_bytes": 0,
     "cloud_api_calls": 0
   }

@@ -10,10 +10,17 @@ def test_hardware_detector():
     assert "platform" in hw
     assert "npu_telemetry" in hw
     assert "system_resources" in hw
-    assert hw["npu_telemetry"]["rated_tops"] == 45
+    telemetry = hw["npu_telemetry"]
+    assert telemetry["rated_tops_design_target"] == 45
+    assert "execution_provider" in telemetry
+    assert "accelerator" in telemetry
+    assert "status" in telemetry
+    assert "reason" in telemetry
+    assert telemetry["status"] in ["ACTIVE", "FALLBACK", "UNAVAILABLE"]
     # Must not falsely claim hardware NPU unless actually present
     if not hw["platform"]["is_arm64"]:
-        assert hw["npu_telemetry"]["is_hardware_npu_active"] is False
+        assert telemetry["is_hardware_npu_active"] is False
+        assert telemetry["execution_provider"] in ["CPUExecutionProvider", "DmlExecutionProvider", "PythonNative"]
 
 def test_local_llm_provider_generation():
     provider = LocalLLMProvider()

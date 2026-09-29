@@ -39,25 +39,48 @@ class HardwareDetector:
         has_dml = "DmlExecutionProvider" in ORT_PROVIDERS
         has_cpu = "CPUExecutionProvider" in ORT_PROVIDERS
 
-        # Determine active and target execution provider
+        # Determine exact execution provider, accelerator, status, and reason
         if has_qnn:
-            active_provider = "QNNExecutionProvider (Qualcomm Hexagon NPU)"
+            execution_provider = "QNNExecutionProvider"
+            accelerator = "Qualcomm Hexagon NPU"
+            status = "ACTIVE"
+            reason = "QNN Execution Provider is registered and targeting the Qualcomm Hexagon NPU."
+            active_provider_label = "QNNExecutionProvider (Qualcomm Hexagon NPU)"
             npu_status = "ACTIVE — Hardware Accelerated"
-            acceleration_type = "NPU (45 TOPS Hexagon Engine)"
+            acceleration_type = "NPU (45 TOPS Hexagon Engine Design Target)"
         elif has_dml and is_snapdragon:
-            active_provider = "DmlExecutionProvider (Snapdragon Adreno / NPU DirectML)"
+            execution_provider = "DmlExecutionProvider"
+            accelerator = "Snapdragon Adreno GPU / DirectML"
+            status = "ACTIVE"
+            reason = "DirectML provider active on Snapdragon architecture."
+            active_provider_label = "DmlExecutionProvider (Snapdragon Adreno)"
             npu_status = "ACTIVE — DirectML Accelerated"
             acceleration_type = "DirectML GPU/NPU"
         elif has_dml:
-            active_provider = "DmlExecutionProvider (DirectML)"
-            npu_status = "Available (DirectML GPU)"
+            execution_provider = "DmlExecutionProvider"
+            accelerator = "GPU (DirectML)"
+            status = "FALLBACK"
+            reason = "DirectML GPU active; QNN NPU provider not loaded on host."
+            active_provider_label = "DmlExecutionProvider (DirectML)"
+            npu_status = "DirectML Fallback"
             acceleration_type = "DirectML GPU"
         elif has_cpu:
-            active_provider = "CPUExecutionProvider (Universal Local CPU Fallback)"
-            npu_status = "STANDBY (Target: Snapdragon Hexagon NPU via QNN EP)"
+            execution_provider = "CPUExecutionProvider"
+            accelerator = "CPU"
+            status = "FALLBACK"
+            if is_snapdragon:
+                reason = "CPU Fallback active on Snapdragon host — QNN EP driver required for Hexagon NPU."
+            else:
+                reason = "CPU Fallback — QNN Execution Provider is available on Windows 11 ARM64 Snapdragon hardware. Current host is x86_64."
+            active_provider_label = "CPUExecutionProvider (Local CPU Fallback)"
+            npu_status = "CPU FALLBACK — QNN provider unavailable on host"
             acceleration_type = "CPU Fallback"
         else:
-            active_provider = "Python Native Fallback"
+            execution_provider = "PythonNative"
+            accelerator = "CPU"
+            status = "UNAVAILABLE"
+            reason = "ONNX Runtime not initialized; running Python software fallback."
+            active_provider_label = "Python Native Fallback"
             npu_status = "Unavailable"
             acceleration_type = "Software Native"
 
@@ -75,10 +98,14 @@ class HardwareDetector:
                 "target_device_profile": "Snapdragon X Elite / Snapdragon X Plus (HP OmniBook / EliteBook)",
             },
             "npu_telemetry": {
-                "npu_name": "Qualcomm® Hexagon™ NPU (Snapdragon® X Series)",
-                "rated_tops": 45,
+                "npu_name": "Qualcomm® Hexagon™ NPU (Snapdragon® X Series Design Target)",
+                "rated_tops_design_target": 45,
                 "npu_status": npu_status,
-                "active_execution_provider": active_provider,
+                "execution_provider": execution_provider,
+                "accelerator": accelerator,
+                "status": status,
+                "reason": reason,
+                "active_execution_provider": active_provider_label,
                 "acceleration_type": acceleration_type,
                 "is_hardware_npu_active": has_qnn,
                 "available_ort_providers": ORT_PROVIDERS,

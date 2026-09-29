@@ -8,6 +8,9 @@ import {
   HardDrive,
   RefreshCw,
   Play,
+  CheckCircle2,
+  AlertTriangle,
+  Info,
 } from 'lucide-react';
 import { type PerformanceMetrics, api } from '../services/api';
 
@@ -96,14 +99,72 @@ export const PerformanceDashboard: React.FC = () => {
         </div>
       ) : metrics ? (
         <>
-          {/* Hardware & NPU Status Overview Banner */}
+          {/* Explicit Hardware & Execution Provider Status Banner */}
+          <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-700 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                <Info className="w-4 h-4 text-blue-400" />
+                Live Execution Provider & Accelerator Audit
+              </span>
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                  metrics.hardware.npu_telemetry.status === 'ACTIVE'
+                    ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-400'
+                    : 'bg-amber-950/80 border-amber-500/50 text-amber-300'
+                }`}
+              >
+                STATUS: {metrics.hardware.npu_telemetry.status}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-1">
+                <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Execution Provider</span>
+                <div className="font-mono text-sm font-bold text-slate-100 truncate">
+                  {metrics.hardware.npu_telemetry.execution_provider || metrics.hardware.npu_telemetry.active_execution_provider}
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-1">
+                <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Accelerator Target</span>
+                <div className="font-sans text-sm font-bold text-red-400 flex items-center gap-1.5">
+                  <Cpu className="w-4 h-4 text-red-400" />
+                  {metrics.hardware.npu_telemetry.accelerator || 'CPU'}
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-1">
+                <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Rated TOPS Design Target</span>
+                <div className="font-mono text-sm font-bold text-amber-300">
+                  {metrics.hardware.npu_telemetry.rated_tops_design_target || 45} TOPS (Qualcomm Hexagon)
+                </div>
+              </div>
+            </div>
+
+            {/* Human Readable Explanation Reason */}
+            <div className="p-3.5 rounded-2xl bg-slate-950/90 border border-slate-800/80 text-xs text-slate-300 flex items-start gap-2.5">
+              {metrics.hardware.npu_telemetry.status === 'ACTIVE' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              )}
+              <div className="space-y-0.5">
+                <span className="font-semibold text-slate-200">Hardware Detection Reason:</span>
+                <p className="text-slate-400 leading-relaxed font-sans">
+                  {metrics.hardware.npu_telemetry.reason}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Hardware Overview Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Processor & Architecture Card */}
             <div className="rounded-3xl bg-slate-900/60 border border-slate-800 p-6 space-y-4">
               <div className="flex items-center justify-between text-xs font-semibold text-slate-400">
-                <span>Target Hardware</span>
+                <span>Target Hardware Profile</span>
                 <span className="px-2 py-0.5 rounded bg-red-950/60 border border-red-500/30 text-red-400 font-bold text-[10px]">
-                  HP Snapdragon PC
+                  HP Snapdragon PC Target
                 </span>
               </div>
               <div>
@@ -142,7 +203,7 @@ export const PerformanceDashboard: React.FC = () => {
                   Neural Processing Unit
                 </span>
                 <span className="px-2 py-0.5 rounded bg-slate-800 text-white font-mono text-[10px] font-bold">
-                  {metrics.hardware.npu_telemetry.rated_tops} TOPS
+                  45 TOPS Target
                 </span>
               </div>
               <div>
@@ -157,7 +218,7 @@ export const PerformanceDashboard: React.FC = () => {
                 <div className="flex justify-between">
                   <span>Active Execution Provider:</span>
                   <strong className="text-slate-200 font-mono text-[11px]">
-                    {metrics.hardware.npu_telemetry.active_execution_provider}
+                    {metrics.hardware.npu_telemetry.execution_provider || metrics.hardware.npu_telemetry.active_execution_provider}
                   </strong>
                 </div>
                 <div className="flex justify-between">
@@ -214,7 +275,7 @@ export const PerformanceDashboard: React.FC = () => {
                 <Clock className="w-4 h-4 text-red-400" />
               </div>
               <div className="text-2xl font-black text-white">
-                {metrics.average_rag_latency_ms > 0 ? `${metrics.average_rag_latency_ms} ms` : '14.8 ms'}
+                {metrics.average_rag_latency_ms > 0 ? `${metrics.average_rag_latency_ms} ms` : 'Host Measured'}
               </div>
               <p className="text-[11px] text-slate-500">Local SIMD Vector Context</p>
             </div>
@@ -225,7 +286,7 @@ export const PerformanceDashboard: React.FC = () => {
                 <Zap className="w-4 h-4 text-amber-400" />
               </div>
               <div className="text-2xl font-black text-amber-400">
-                {metrics.average_throughput_tokens_sec > 0 ? `${metrics.average_throughput_tokens_sec} tok/s` : '120.4 tok/s'}
+                {metrics.average_throughput_tokens_sec > 0 ? `${metrics.average_throughput_tokens_sec} tok/s` : 'Host Measured'}
               </div>
               <p className="text-[11px] text-slate-500">Zero Network Overhead</p>
             </div>
@@ -236,7 +297,7 @@ export const PerformanceDashboard: React.FC = () => {
                 <Gauge className="w-4 h-4 text-blue-400" />
               </div>
               <div className="text-2xl font-black text-white">
-                {metrics.average_ingest_latency_ms > 0 ? `${metrics.average_ingest_latency_ms} ms` : '60.2 ms'}
+                {metrics.average_ingest_latency_ms > 0 ? `${metrics.average_ingest_latency_ms} ms` : 'Host Measured'}
               </div>
               <p className="text-[11px] text-slate-500">PyMuPDF Text & Chunking</p>
             </div>

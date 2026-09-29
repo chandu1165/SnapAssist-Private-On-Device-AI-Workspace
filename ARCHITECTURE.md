@@ -5,7 +5,7 @@
 
 ## 1. System Architecture Overview
 
-SnapAssist is architected as a local-first, privacy-guaranteed desktop workspace specifically optimized for **Snapdragon-powered HP Windows PCs**. The entire data lifecycle—from file ingestion and vector embeddings to neural inference and citation verification—operates strictly on `localhost`.
+SnapAssist is architected as a local-first workspace for **Snapdragon-powered HP Windows PCs**. All document processing, vector search, image OCR, and contextual synthesis operate strictly on `localhost`.
 
 ```mermaid
 flowchart TD
@@ -37,15 +37,15 @@ flowchart TD
             LocalLLM[Local Grounded Core\nZero Egress Synthesizer]
         end
         
-        subgraph Hardware Acceleration Subsystem
-            QNN[QNN Execution Provider\nQualcomm Hexagon NPU 45 TOPS]
-            DML[DirectML\nSnapdragon Adreno GPU]
-            CPU[CPU SIMD Fallback\nQualcomm Oryon CPU]
+        subgraph Hardware Runtimes
+            QNN[QNN Execution Provider\nQualcomm Hexagon NPU]
+            DML[DirectML Provider\nSnapdragon Adreno GPU]
+            CPU[CPU Fallback\nQualcomm Oryon / Host CPU]
         end
     end
     
     User -->|Drag & Drop / Query| UI
-    UI -->|REST / JSON| API
+    UI -->|Local HTTP| API
     API --> DocParser & VisionOCR
     DocParser --> Chunker
     VisionOCR --> Chunker
@@ -61,30 +61,28 @@ flowchart TD
 
 ---
 
-## 2. Ingestion & Document Processing Pipeline
+## 2. Ingestion & Preprocessing Pipeline
 
-1. **Document Ingestion (`backend/ingestion/document_parser.py`):**
-   - **PDF:** Extracted page-by-page via PyMuPDF (`fitz`), capturing exact page text, dimensions, and character offsets.
-   - **DOCX:** Structured paragraph and tabular extraction via `python-docx`.
-   - **TXT / Markdown:** Raw UTF-8 / CP1252 auto-detected decoding.
-   - **Images & Screenshots:** Analyzed locally via `backend/ai/ocr_engine.py` using OpenCV contour heuristics and OCR to classify layouts (e.g., UI Screenshots, Technical Whitepapers, Dashboards).
+1. **Document Parsing (`backend/ingestion/document_parser.py`):**
+   - **PDF:** Page-by-page extraction via PyMuPDF (`pymupdf`), capturing text and page numbers.
+   - **DOCX:** Paragraph and table extraction via `python-docx`.
+   - **TXT / Markdown:** Plain text parsing.
+   - **Images & Screenshots:** On-device visual layout classification and OCR via OpenCV contour heuristics and PIL (`backend/ai/ocr_engine.py`).
 2. **Semantic Chunking (`backend/ingestion/chunker.py`):**
-   - Sliding-window sentence chunker (~300–600 characters) with 50–100 character semantic overlap.
-   - Crucially preserves the source document ID, chunk index, and page number for verified source citations.
+   - Overlapping sliding-window chunker (~300–600 characters) preserving page references.
 
 ---
 
-## 3. High-Performance Local Vector Store (`backend/retrieval/vector_store.py`)
+## 3. Vector Storage & Search (`backend/retrieval/vector_store.py`)
 
-- **384-Dimensional Dense Embeddings:** Generated on-device using hash-projected n-gram positional embeddings or quantized ONNX embedding models.
-- **SIMD Cosine Similarity:** In-memory NumPy vectorized dot-product matrix search (`np.dot(matrix, query_vec)`).
-- **Sub-5ms Retrieval:** Eliminates the latency, network cost, and reliability risks of remote vector databases.
+- **384-Dimensional Dense Vectors:** Generated locally using positional n-gram projections or ONNX embedding graphs.
+- **SIMD Cosine Dot-Product Search:** Vectorized in-memory NumPy matrix search (`np.dot(matrix, query_vec)`).
 
 ---
 
 ## 4. Modular AI Provider Abstraction (`backend/ai/`)
 
-SnapAssist isolates the model execution layer behind an abstract base class (`AIProvider`):
+Inference backends extend `AIProvider`:
 
 ```python
 class AIProvider(ABC):
@@ -97,18 +95,15 @@ class AIProvider(ABC):
         pass
 ```
 
-### Hierarchy of Execution:
-1. **Qualcomm AI Hub Provider (`QualcommAIHubProvider`):** Targeted for Snapdragon X Elite CRD and Windows on Snapdragon devices. Configured for INT4 quantized models (Llama-3.2-1B, Phi-3.5-mini) running on the Hexagon NPU via QAIRT.
-2. **Local ONNX Provider (`LocalONNXProvider`):** Automatically detects available execution providers in priority order:
-   - `QNNExecutionProvider` (Qualcomm Neural Network execution provider on Snapdragon NPU)
-   - `DmlExecutionProvider` (DirectML on Snapdragon Adreno GPU)
-   - `CPUExecutionProvider` (Universal CPU fallback)
-3. **Local Grounded Core (`LocalLLMProvider`):** Ultra-lightweight deterministic contextual synthesis engine providing zero-hallucination grounded responses with exact page references.
+### Execution Priority & Runtime Detection
+1. `QNNExecutionProvider` (Qualcomm Neural Network execution provider targeting Qualcomm Hexagon NPU on Windows 11 ARM64).
+2. `DmlExecutionProvider` (DirectML GPU acceleration).
+3. `CPUExecutionProvider` (Universal CPU fallback with clear status reporting).
 
 ---
 
-## 5. Grounded RAG & Citation Engine
+## 5. Grounded RAG & Citations
 
-To prevent hallucination, SnapAssist matches every claim against retrieved document chunks:
-- Each claim is anchored to a specific chunk: `[Doc: whitepaper.pdf, Page: 2]`.
-- The UI exposes an interactive **Citation Drawer**, allowing users to inspect the exact underlying text snippet and similarity confidence score.
+- Answers are synthesized using context chunks retrieved from local vector storage.
+- Every claim includes explicit source references `[Document: filename, Page: X]`.
+- If evidence is insufficient, the system explicitly reports: *"I couldn't find enough information in the indexed documents."*

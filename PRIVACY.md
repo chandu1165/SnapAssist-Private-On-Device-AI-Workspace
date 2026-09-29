@@ -4,31 +4,32 @@
 
 ## 1. Executive Summary
 
-SnapAssist is built on a fundamental conviction: **Knowledge workers, students, researchers, and enterprise professionals should never be forced to sacrifice confidential documents to cloud AI servers.**
+SnapAssist is built on a local-first philosophy: **Users should never be forced to send confidential documents, financial reports, proprietary code, or personal study notes to third-party cloud servers.**
 
-Traditional cloud AI assistants transmit raw document text, confidential internal memos, proprietary source code, and user prompts across public telecommunications networks to centralized multi-tenant data centers. This introduces data breach risks, compliance violations (GDPR, HIPAA, SOC-2), internet dependency, latency, and subscription fees.
-
-SnapAssist guarantees **100% on-device execution** on Snapdragon-powered Windows PCs.
+SnapAssist executes document ingestion, vector storage, semantic search, and AI reasoning on the local machine (`localhost`).
 
 ---
 
-## 2. Privacy Guarantees & Verification
+## 2. Privacy Architecture & Telemetry Disambiguation
 
-| Dimension | Cloud AI Services | SnapAssist On-Device Workspace |
+To maintain absolute technical truthfulness, SnapAssist distinguishes between **Architecture Guarantees** and **Measured Telemetry**:
+
+| Dimension | Cloud AI Services | SnapAssist Architecture Guarantee |
 | :--- | :--- | :--- |
-| **Document Storage** | Remote Cloud Bucket (S3/GCS) | Local Disk (`backend/data/uploads`) |
-| **Text Parsing** | Remote Server Parsing API | Local PyMuPDF & Python-docx |
-| **Vector Storage** | Cloud Vector DB (Pinecone/Milvus) | Local SQLite Vector Table |
-| **Embedding Generation** | OpenAI / Cohere API Calls | On-Device High-Dimensional Vector SIMD |
-| **AI Inference** | Cloud LLM (OpenAI, Anthropic) | On-Device Qualcomm Hexagon NPU / ONNX Runtime |
-| **Network Egress** | Continuous payload transmission | **0 Bytes Outbound** |
-| **Offline Mode** | 0% Functional (Requires Internet) | **100% Fully Functional** |
+| **Document Storage** | Remote Cloud Buckets | Local Disk (`backend/data/uploads`) |
+| **Text Parsing** | Remote Server APIs | Local PyMuPDF & python-docx |
+| **Vector Storage** | Cloud Vector DB | Local SQLite Vector Table |
+| **Embedding Generation** | Cloud API Calls | Local On-Device Vector Embeddings |
+| **AI Inference** | Remote Cloud LLMs | On-Device Qualcomm Hexagon NPU / ONNX Runtime |
+| **Outbound Payload Egress** | Continuous transmission | **0 Bytes Outbound by Architecture** |
+| **Local IPC** | N/A | Frontend/Backend communicate strictly over `127.0.0.1` |
+| **Offline Functionality** | Unavailable | **Fully Functional at Runtime** |
 
 ---
 
-## 3. Cryptographic & Tamper-Evident Audit Logging
+## 3. Local Audit Logging
 
-Every ingestion, chunking, search, and inference operation in SnapAssist is recorded in a local SQLite audit table:
+Every document ingestion, chunking, search, and inference operation is recorded in a local SQLite audit table:
 
 ```sql
 CREATE TABLE audit_log (
@@ -43,31 +44,25 @@ CREATE TABLE audit_log (
 );
 ```
 
-### Verification Proof
-- `is_local`: Statically enforced to `1` across all internal pipelines.
-- `bytes_outbound`: Monitored and maintained at `0`.
-- `external_api_calls`: Strictly `0`.
+- `is_local`: Set to `1` for all local pipelines.
+- `bytes_outbound`: Set to `0` for architecture-enforced local operations.
+- `external_api_calls`: Set to `0`.
 
-Users and enterprise compliance auditors can view this live trail directly inside the **Privacy Dashboard** in the application UI, or export the audit log as JSON via `GET /api/system/privacy`.
-
----
-
-## 4. Local File Sanitization & Security Defenses
-
-SnapAssist incorporates strict input validation and defensive programming:
-1. **Directory Traversal Protection:** User filenames are stripped of `../`, `..\`, and illegal path delimiters via `backend/storage/file_store.py::sanitize_filename`.
-2. **Path Containment:** Every saved and loaded file path is verified using `os.path.abspath` against the root upload directory to prevent symlink traversal.
-3. **Extension Whitelisting:** Only `.pdf`, `.docx`, `.txt`, `.md`, `.png`, `.jpg`, `.jpeg`, `.webp` are permitted. Binary executables (`.exe`, `.bat`, `.dll`) are rejected immediately.
-4. **Memory Scrubbing:** Upload buffers are processed as byte arrays and dereferenced immediately after parsing to avoid persistent memory leaks.
+Users can inspect this audit trail in real time via the **Privacy Dashboard** or export the log as JSON via `GET /api/system/privacy`.
 
 ---
 
-## 5. Offline Verification Instructions
+## 4. Input Validation & Defensive Security
 
-To independently verify SnapAssist's offline capabilities on your Snapdragon PC:
-1. Disconnect Wi-Fi or unplug your Ethernet cable.
-2. Open SnapAssist in your browser: `http://localhost:5173`.
-3. Drag and drop any PDF or text file into the repository.
-4. Query the document in the AI Workspace:
-   > *"Summarize this document and list key action items."*
-5. Observe sub-15ms local inference and grounded citation rendering without network connectivity.
+- **Path Traversal Protection:** Filenames are sanitized via `backend/storage/file_store.py::sanitize_filename` to strip path delimiters (`../`, `..\`). Target file paths are validated to ensure they remain inside `backend/data/uploads`.
+- **Extension Validation:** Only `.pdf`, `.docx`, `.txt`, `.md`, `.png`, `.jpg`, `.jpeg`, `.webp` extensions are allowed. Unrecognized binary formats are rejected.
+- **Hardened CORS:** Endpoint origins are restricted in `backend/api/main.py` strictly to local dev hosts (`http://localhost:5173`, `http://127.0.0.1:5173`, etc.).
+
+---
+
+## 5. Offline Verification Procedure
+
+1. Sever network connectivity (toggle Airplane Mode or disconnect Wi-Fi).
+2. Open SnapAssist in your browser (`http://localhost:5173`).
+3. Import a document or image and run grounded Q&A or semantic search.
+4. Verify that all features operate with zero network connection.
