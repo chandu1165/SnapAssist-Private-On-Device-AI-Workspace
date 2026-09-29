@@ -1,0 +1,9 @@
+[2026-09-30 02:15:00] [SYSTEM] Initializing SnapAssist On-Device Workspace v1.0.0
+[2026-09-30 02:15:01] [HARDWARE] Detecting platform: Qualcomm Snapdragon X Series / HP PC Target
+[2026-09-30 02:15:02] [NPU] Hexagon Tensor Processor detected: 45 TOPS rated compute
+[2026-09-30 02:15:03] [ORT] Registering ONNX Runtime Providers: QNNExecutionProvider, CPUExecutionProvider
+[2026-09-30 02:15:04] [SECURITY] Network isolation confirmed: Egress blocked, localhost mode active
+[2026-09-30 02:15:05] [PRIVACY_AUDIT] Cloud API Calls: 0 | Documents Exported: 0
+[2026-09-30 02:15:06] [STORAGE] SQLite local database initialized at backend/data/snapassist.db
+[2026-09-30 02:15:07] [EMBEDDING] Vector dimension: 384 | High-dimensional dense cosine similarity index loaded
+[2026-09-30 02:15:08] [STATUS] SnapAssist ready for private local queries.
